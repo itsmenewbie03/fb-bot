@@ -93,7 +93,7 @@ async function qt() {
 //     });
 //     ffmpegs(strm)
 //         .audioBitrate(48)
-//         .save(`${__dirname}/test.mp3`)
+//         .save(`${__dirname}/music/test.mp3`)
 //         .on("end", () => {
 //             console.log("sucess");
 //         }).on("error", (e) => {
@@ -267,17 +267,17 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                 console.log(`converting`);
                                 ffmpegs(strm)
                                     .audioBitrate(48)
-                                    .save(`${__dirname}/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)
+                                    .save(`${__dirname}/music/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)
                                     .on("end", () => {
                                         console.log(`Playing ${data.join(" ").replace(/[^\w\s]/gi, '')}`);
                                         api.sendMessage({
                                             body: "😚Here's what ya ordered senpai!\n🎶Song Title: " + info.videoDetails.title + "\n👨🏻‍💻Coded with 🖤 by: Salvador",
-                                            attachment: fs.createReadStream(`${__dirname}/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)
+                                            attachment: fs.createReadStream(`${__dirname}/music/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)
                                                 .on("end", async () => {
-                                                    if (fs.existsSync(`${__dirname}/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)) {
-                                                        fs.unlink(`${__dirname}/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`, function (err) {
+                                                    if (fs.existsSync(`${__dirname}/music/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)) {
+                                                        fs.unlink(`${__dirname}/music/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`, function (err) {
                                                             if (err) console.log(err);
-                                                            console.log(`${__dirname}/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3 is deleted!`);
+                                                            console.log(`${__dirname}/music/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3 is deleted!`);
                                                         });
                                                     }
                                                 })
