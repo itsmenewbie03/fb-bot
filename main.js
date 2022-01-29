@@ -268,6 +268,10 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                 ffmpegs(strm)
                                     .audioBitrate(48)
                                     .save(`${__dirname}/music/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)
+                                    .on("error", (e) => {
+                                        console.log(`https://www.youtube.com/watch?v=${musics.content[0].videoId} | ${e.message}`)
+                                        api.sendMessage(`⚠️${e.message}`, event.threadID, event.messageID);
+                                    })
                                     .on("end", () => {
                                         console.log(`Playing ${data.join(" ").replace(/[^\w\s]/gi, '')}`);
                                         api.sendMessage({
@@ -282,10 +286,6 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                                     }
                                                 })
                                         }, event.threadID, event.messageID);
-                                    })
-                                    .on("error", (e) => {
-                                        console.log(`https://www.youtube.com/watch?v=${musics.content[0].videoId} | ${e.message}`)
-                                        api.sendMessage(`⚠️${e.message}`, event.threadID, event.messageID);
                                     })
 
                             } catch (err) {
