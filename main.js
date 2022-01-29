@@ -73,34 +73,6 @@ async function qt() {
     return qoute
 }
 /*==================================== RANDOM QOUTES FUNC ====================================*/
-// async function test() {
-//     await musicApi.initalize();
-//     const srch = await musicApi.search("hgfakdf kashdfkajshdfklashf");
-//     console.log(srch.content);
-//     if (!srch?.content?.length) {
-//         throw new Error(`Qiery returned no result!`)
-//     } else {
-//         if (srch.content[0].videoId === undefined) {
-//             throw new Error(`${data.join(" ").replace(/[^\w\s]/gi, '')} is not found on youtube music`)
-//         }
-//     }
-//     const url = `https://www.youtube.com/watch?v=${srch.content[0].videoId}`;
-//     console.log(`connecting to yt`);
-//     const info = await ytdl.getInfo(url);
-//     console.log(info.videoDetails.title);
-//     const strm = ytdl(url, {
-//         quality: "lowest"
-//     });
-//     ffmpegs(strm)
-//         .audioBitrate(48)
-//         .save(`${__dirname}/music/test.mp3`)
-//         .on("end", () => {
-//             console.log("sucess");
-//         }).on("error", (e) => {
-//             console.log("error caught: "+e.message);
-//         })
-// }
-// test();
 login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, api) => {
     if (err) return console.error(err);
     api.setOptions({ listenEvents: true });
@@ -251,7 +223,7 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                 data.shift();
                                 await musicApi.initalize();
                                 const musics = await musicApi.search(data.join(" ").replace(/[^\w\s]/gi, ''));
-                                if (!musics?.content?.length) {
+                                if (musics.content.length == 0) {
                                     throw new Error(`${data.join(" ").replace(/[^\w\s]/gi, '')} returned no result!`)
                                 } else {
                                     if (musics.content[0].videoId === undefined) {
@@ -259,7 +231,7 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                     }
                                 }
                                 const url = `https://www.youtube.com/watch?v=${musics.content[0].videoId}`;
-                                console.log(`connecting to yt`);
+                                console.log(`connecting to yt ${url}`);
                                 const strm = ytdl(url, {
                                     quality: "lowest"
                                 });
@@ -268,9 +240,9 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                 ffmpegs(strm)
                                     .audioBitrate(48)
                                     .save(`${__dirname}/music/${data.join(" ").replace(/[^\w\s]/gi, '')}.mp3`)
-                                    .on("error", (e) => {
-                                        console.log(`https://www.youtube.com/watch?v=${musics.content[0].videoId} | ${e.message}`)
-                                        api.sendMessage(`⚠️${e.message}`, event.threadID, event.messageID);
+                                    .on('error', function(err, stdout, stderr) {
+                                        console.log(`https://www.youtube.com/watch?v=${musics.content[0].videoId} | ${err.message}`)
+                                        api.sendMessage(`⚠️${err.message}`, event.threadID, event.messageID);
                                     })
                                     .on("end", () => {
                                         console.log(`Playing ${data.join(" ").replace(/[^\w\s]/gi, '')}`);
