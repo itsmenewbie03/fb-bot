@@ -76,7 +76,7 @@ async function qt() {
 /*==================================== DICTIONARY FUNC ====================================*/
 
 async function getDef(q) {
-    out = await axios.get("https://api.dictionaryapi.dev/api/v2/entries/en/" + q).then((response) => { return response.data }).catch((error) => { return error })
+    out = await axios.get("https://api.dictionaryapi.dev/api/v2/entries/en/" + q).then((response) => { return response.data }).catch((error) => { return error.response.data })
     return out
 }
 /*==================================== DICTIONARY FUNC ====================================*/
@@ -288,8 +288,8 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                 data.shift()
                                 var txtdef = "";
                                 let res = await getDef(data.join(" "));
-                                if(res === undefined){
-                                    throw new Error(`API RETURNED THIS: ${res}`)
+                                if(res[0] === undefined){
+                                    throw new Error(`${res.title}`)
                                 }
                                 txtdef += `ℹ ${res[0].word} \\${res[0].phonetic}\\\n💡${res[0].origin}\n`
                                 let defs = res[0].meanings;
