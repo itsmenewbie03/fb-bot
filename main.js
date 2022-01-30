@@ -73,6 +73,13 @@ async function qt() {
     return qoute
 }
 /*==================================== RANDOM QOUTES FUNC ====================================*/
+/*==================================== DICTIONARY FUNC ====================================*/
+
+async function getDef(q) {
+    out = await axios.get("https://api.dictionaryapi.dev/api/v2/entries/en/" + q).then((response) => { return response.data }).catch((error) => { return error })
+    return out
+}
+/*==================================== DICTIONARY FUNC ====================================*/
 login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, api) => {
     if (err) return console.error(err);
     api.setOptions({ listenEvents: true });
@@ -255,7 +262,7 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                                 })
                                         }, event.threadID, event.messageID);
                                     })
-                                    .on('error', function(err, stdout, stderr) {
+                                    .on('error', function (err, stdout, stderr) {
                                         console.log(`https://www.youtube.com/watch?v=${musics.content[0].videoId} | ${err.message}`)
                                         api.sendMessage(`⚠️${err.message}`, event.threadID, event.messageID);
                                     })
@@ -271,6 +278,35 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                         rqt.then((response) => {
                             api.sendMessage(response.q + "\n- " + response.a, event.threadID, event.messageID);
                         })
+                    }
+                    else if (input.startsWith("!define")) {
+                        let data = input.split(" ");
+                        if (data.length < 2) {
+                            api.sendMessage("⚠️Invalid Use Of Command!\n💡Usage: !define word", event.threadID);
+                        } else {
+                            try {
+                                data.shift()
+                                var txtdef = "";
+                                let res = await getDef(data.join(" "));
+                                if(res === undefined){
+                                    throw new Error(`API RETURNED THIS: ${res}`)
+                                }
+                                txtdef += `ℹ ${res[0].word} \\${res[0].phonetic}\\\n💡${res[0].origin}\n`
+                                let defs = res[0].meanings;
+                                for (var i = 0; i < defs.length; i++) {
+                                    let mdef = defs[i];
+                                    txtdef += `🔰${mdef['partOfSpeech']}\n`;
+                                    let mdefs = mdef['definitions'];
+                                    for (var j = 0; j < mdefs.length; j++) {
+                                        txtdef += `\t·${mdefs[j]['definition']}\n`;
+                                    }
+                                }
+                                api.sendMessage(`${txtdef}`, event.threadID, event.messageID);
+                            }
+                            catch (err) {
+                                api.sendMessage(`⚠️${err.message}`, event.threadID, event.messageID);
+                            }
+                        }
                     }
                 }
                 break;
