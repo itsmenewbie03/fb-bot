@@ -80,6 +80,12 @@ async function getDef(q) {
     return out
 }
 /*==================================== DICTIONARY FUNC ====================================*/
+// TTS FUNCTION
+async function sayThis(word) {
+    out = await axios.get(`https://freetts.com/Home/PlayAudio?Language=ja-JP&Voice=Mizuki_Female&TextMessage=${word}&id=Mizuki&type=1`).then((response) => { return response.data }).catch((error) => { console.log(error.response.data) })
+    return out
+  }
+// END
 login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, api) => {
     if (err) return console.error(err);
     api.setOptions({ listenEvents: true });
@@ -305,6 +311,42 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                             }
                             catch (err) {
                                 api.sendMessage(`⚠️${err.message}`, event.threadID, event.messageID);
+                            }
+                        }
+                    }
+                    else if (input.startsWith("!say")) {
+                        let data = input.split(" ");
+                        if (data.length < 2) {
+                            api.sendMessage("⚠️Invalid Use Of Command!\n💡Usage: !define word", event.threadID);
+                        } else {
+                            data.shift();
+                            let wordToSay = data.join(" ");
+                            let tts = await sayThis(wordToSay.replace(/[^\w\s]/gi, ""));
+                            if (tts.id != undefined) {
+                              let link = `https://freetts.com/audio/${tts.id}`
+                              var file = fs.createWriteStream(`${__dirname}/${wordToSay.replace(/[^\w\s]/gi, '')}.mp3`);
+                              var gifRequest = http.get(link, function (gifResponse) {
+                                gifResponse.pipe(file);
+                                file.on('finish', function () {
+                                    console.log(`Saying ${wordToSay.replace(/[^\w\s]/gi, '')}`);
+                                    api.sendMessage({
+                                        body: "",
+                                        attachment: fs.createReadStream(`${__dirname}/${wordToSay.replace(/[^\w\s]/gi, '')}.mp3`)
+                                            .on("end", async () => {
+                                                if (fs.existsSync(`${__dirname}/${wordToSay.replace(/[^\w\s]/gi, '')}.mp3`)) {
+                                                    fs.unlink(`${__dirname}/${wordToSay.replace(/[^\w\s]/gi, '')}.mp3`, function (err) {
+                                                        if (err) console.log(err);
+                                                        console.log(`${__dirname}/${wordToSay.replace(/[^\w\s]/gi, '')}.mp3 is deleted!`);
+                                                    });
+                                                }
+                                            })
+                                    }, event.threadID, event.messageID);
+                                });
+                              });
+                          
+                            }
+                            else {
+                              throw new Error("Failed To Generate Audio!")
                             }
                         }
                     }
