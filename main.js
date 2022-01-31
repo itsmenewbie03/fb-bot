@@ -108,7 +108,7 @@ async function addTextOnImage(t) {
         const svgImage = `
       <svg width="${width}" height="${height}">
         <style>
-        .title { fill: #000; font-size: 20px; font-family: Tahoma;}
+        .title { fill: #000; font-size: 20px;}
         </style>
         <text x="30%" y="60%" text-anchor="middle" class="title" transform="translate(100,100) rotate(15)">${text}</text>
       </svg>
