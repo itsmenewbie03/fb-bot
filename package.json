@@ -15,6 +15,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "got": "^11.8.2",
     "node-schedule": "^2.1.0",
+    "sharp": "^0.29.3",
     "youtube-music-api": "^1.0.6",
     "ytdl-core": "^4.10.0"
   }

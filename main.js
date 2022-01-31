@@ -6,8 +6,10 @@ const YoutubeMusicApi = require('youtube-music-api')
 const ytdl = require('ytdl-core');
 const ffmpeg = require('@ffmpeg-installer/ffmpeg');
 const ffmpegs = require('fluent-ffmpeg');
+const { fail } = require("assert");
 ffmpegs.setFfmpegPath(ffmpeg.path);
 const musicApi = new YoutubeMusicApi()
+const sharp = require("sharp");
 // GLOBAL MESSAGE STORAGE
 let msgs = {};
 let vips = ['100007909449910', '100011343529559'];
@@ -84,6 +86,50 @@ async function getDef(q) {
 async function sayThis(word) {
     out = await axios.get(`https://freetts.com/Home/PlayAudio?Language=ja-JP&Voice=Mizuki_Female&TextMessage=${word}&id=Mizuki&type=1`).then((response) => { return response.data }).catch((error) => { console.log(error.response.data) })
     return out
+}
+// END
+
+// wiki func
+async function wiki(q) {
+    let result = axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${q}`).then((response) => { return response.data }).catch((err) => { return err })
+    return result
+}
+// end
+
+// FACTS FUNC
+
+async function addTextOnImage(t) {
+    try {
+        let img = await sharp("fact.png").metadata();
+        const width = img.width;
+        const height = img.height;
+        const text = t;
+
+        const svgImage = `
+      <svg width="${width}" height="${height}">
+        <style>
+        .title { fill: #000; font-size: 20px; font-family: Tahoma;}
+        </style>
+        <text x="30%" y="60%" text-anchor="middle" class="title" transform="translate(100,100) rotate(15)">${text}</text>
+      </svg>
+      `;
+        const svgBuffer = Buffer.from(svgImage);
+        const image = await sharp(svgBuffer).toFile(`${t}_txt.png`);
+        await sharp("fact.png")
+            .composite([
+                {
+                    input: `${t}_txt.png`,
+                    top: -10,
+                    left: 50,
+                },
+            ])
+            .toFile(`${t}_output.png`);
+        return true
+
+    } catch (error) {
+        console.log(error.message);
+        return false
+    }
 }
 // END
 login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, api) => {
@@ -319,11 +365,11 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                         if (data.length < 2) {
                             api.sendMessage("⚠️Invalid Use Of Command!\n💡Usage: !define word", event.threadID);
                         } else {
+                            data.shift();
+                            let wordToSay = data.join(" ");
+                            let tts = await sayThis(wordToSay.replace(/[^\w\s]/gi, ""));
                             try {
-                                data.shift();
-                                let wordToSay = data.join(" ");
-                                let tts = await sayThis(wordToSay.replace(/[^\w\s]/gi, ""));
-                                if (tts.id != undefined) {
+                                if (tts.id !== undefined) {
                                     let link = `https://freetts.com/audio/${tts.id}`
                                     var file = fs.createWriteStream(`${__dirname}/${wordToSay.replace(/[^\w\s]/gi, '')}.mp3`);
                                     var gifRequest = http.get(link, function (gifResponse) {
@@ -348,6 +394,36 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                 }
                                 else {
                                     throw new Error("Failed To Generate Audio!")
+                                }
+                            } catch (err) {
+                                api.sendMessage(`⚠️${err.message}`, event.threadID, event.messageID);
+                            }
+                        }
+                    }
+                    else if (input.startsWith("!fact")) {
+                        let data = input.split(" ");
+                        if (data.length < 2) {
+                            api.sendMessage("⚠️Invalid Use Of Command!\n💡Usage: !fact say_something", event.threadID);
+                        } else {
+                            try {
+                                data.shift()
+                                let txt = data.join(" ").replace("\\","");
+                                let img = await addTextOnImage(txt);
+                                if(!img){
+                                    throw new Error("Failed to Generate Image!")
+                                } else{
+                                    api.sendMessage({
+                                        body: "",
+                                        attachment: fs.createReadStream(`${__dirname}/${txt}_output.png`)
+                                            .on("end", async () => {
+                                                if (fs.existsSync(`${__dirname}/${txt}_output.png`)) {
+                                                    fs.unlink(`${__dirname}/${txt}_output.png`, function (err) {
+                                                        if (err) console.log(err);
+                                                        console.log(`${__dirname}/${txt}_output.png is deleted!`);
+                                                    });
+                                                }
+                                            })
+                                    }, event.threadID, event.messageID);
                                 }
                             }
                             catch (err) {
