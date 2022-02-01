@@ -84,7 +84,7 @@ async function getDef(q) {
 /*==================================== DICTIONARY FUNC ====================================*/
 // TTS FUNCTION
 async function sayThis(word) {
-    out = await axios.get(`https://freetts.com/Home/PlayAudio?Language=ja-JP&Voice=Mizuki_Female&TextMessage=${word}&id=Mizuki&type=1`).then((response) => { return response.data }).catch((error) => { console.log(error.response.data) })
+    out = await axios.get(`https://freetts.com/Home/PlayAudio?Language=ja-JP&Voice=Mizuki_Female&TextMessage=${word}&id=Mizuki&type=1`).then((response) => { return response.data }).catch((error) => { console.log(error) });
     return out
 }
 // END
@@ -108,7 +108,7 @@ async function addTextOnImage(t) {
         const svgImage = `
       <svg width="${width}" height="${height}">
         <style>
-        .title { fill: #000; font-size: 20px;}
+        .title { fill: #000; font-size: 20px; font-family: Tahoma;}
         </style>
         <text x="30%" y="60%" text-anchor="middle" class="title" transform="translate(100,100) rotate(15)">${text}</text>
       </svg>
@@ -363,13 +363,13 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                     else if (input.startsWith("!say")) {
                         let data = input.split(" ");
                         if (data.length < 2) {
-                            api.sendMessage("⚠️Invalid Use Of Command!\n💡Usage: !define word", event.threadID);
+                            api.sendMessage("⚠️Invalid Use Of Command!\n💡Usage: !say words", event.threadID);
                         } else {
                             data.shift();
                             let wordToSay = data.join(" ");
                             let tts = await sayThis(wordToSay.replace(/[^\w\s]/gi, ""));
                             try {
-                                if (tts.id !== undefined) {
+                                if (tts !== undefined) {
                                     let link = `https://freetts.com/audio/${tts.id}`
                                     var file = fs.createWriteStream(`${__dirname}/${wordToSay.replace(/[^\w\s]/gi, '')}.mp3`);
                                     var gifRequest = http.get(link, function (gifResponse) {
@@ -422,8 +422,35 @@ login({ appState: JSON.parse(fs.readFileSync('fbstate.json', 'utf8')) }, (err, a
                                                         console.log(`${__dirname}/${txt}_output.png is deleted!`);
                                                     });
                                                 }
+                                                if (fs.existsSync(`${__dirname}/${txt}_txt.png`)) {
+                                                    fs.unlink(`${__dirname}/${txt}_txt.png`, function (err) {
+                                                        if (err) console.log(err);
+                                                        console.log(`${__dirname}/${txt}_txt.png is deleted!`);
+                                                    });
+                                                }
                                             })
                                     }, event.threadID, event.messageID);
+                                }
+                            }
+                            catch (err) {
+                                api.sendMessage(`⚠️${err.message}`, event.threadID, event.messageID);
+                            }
+                        }
+                    }
+                    else if (input.startsWith("!wiki")) {
+                        let data = input.split(" ");
+                        if (data.length < 2) {
+                            api.sendMessage("⚠️Invalid Use Of Command!\n💡Usage: !wiki query", event.threadID);
+                        } else {
+                            try {
+                                data.shift()
+                                let query = data.join(" ")
+                                let wikiresp = await wiki(query);
+                                if(wikiresp.title === undefined){
+                                    throw new Error(`No Results Found!`)
+                                }
+                                else{
+                                    api.sendMessage(`ℹ${wikiresp.title}\n\t🔰${wikiresp.extract}`,event.threadID,event.messageID);
                                 }
                             }
                             catch (err) {
